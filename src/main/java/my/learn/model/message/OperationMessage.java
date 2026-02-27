@@ -2,8 +2,7 @@ package my.learn.model.message;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import my.learn.constatnts.Constants;
-import my.learn.constatnts.MessageData;
+import my.learn.config.MessageData;
 import my.learn.model.Operation;
 
 import java.util.List;
@@ -14,7 +13,7 @@ public class OperationMessage implements Message {
 
     private final String filePath;
     @Getter
-    private final List<Operation> operations = Constants.operations;
+    private final List<Operation> operations = List.of(Operation.values());
     private final String delimiter;
 
 

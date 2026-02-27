@@ -3,6 +3,7 @@ package my.learn.service;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Тестирование FileService - работа с файловой системой")
 class FileServiceTest {
 
-    private final String TEST_FILE_PATH = "./fileService.txt";
+    private final String TEST_FILE_PATH = "./test/fileService.txt";
     private final Integer TEST_WORDS_MIN_LENGTH = 10;
     private final Integer TEST_WORDS_MAX_LENGTH = 100;
     private String fileContent;
@@ -47,15 +48,15 @@ class FileServiceTest {
         }
     }
 
-    @AfterEach
-    @DisplayName("Очистка тестового окружения: удаление тестового файла")
-    void deleteTestFile() {
-        try {
-            Files.deleteIfExists(Paths.get(TEST_FILE_PATH));
-        } catch (IOException e) {
-            System.err.println("Error deleting file: " + TEST_FILE_PATH);
-        }
-    }
+//    @AfterEach
+//    @DisplayName("Очистка тестового окружения: удаление тестового файла")
+//    void deleteTestFile() {
+//        try {
+//            Files.deleteIfExists(Paths.get(TEST_FILE_PATH));
+//        } catch (IOException e) {
+//            System.err.println("Error deleting file: " + TEST_FILE_PATH);
+//        }
+//    }
 
     /**
      * Генерирует случайный текст для тестового файла
@@ -82,12 +83,12 @@ class FileServiceTest {
 
     @Test
     @DisplayName("Установка пути: корректный путь успешно сохраняется")
-    void setFilePath_ValidPath_SetsFilePath() throws Exception {
+    void setFilePath_ValidPath_SetsAndValidateFilePath() throws Exception {
         // Given
         String expectedPath = TEST_FILE_PATH;
 
         // When
-        fileService.setFilePath(expectedPath);
+        fileService.setAndValidateFilePath(expectedPath);
 
         // Then
         assertEquals(expectedPath, fileService.getFilePath());
@@ -95,13 +96,13 @@ class FileServiceTest {
 
     @Test
     @DisplayName("Установка пути: некорректный путь вызывает исключение и сбрасывает путь")
-    void setFilePath_InvalidPath_ThrowsException() {
+    void setAndValidateFilePath_InvalidPath_ThrowsException() {
         // Given
         String invalidPath = "./non_existent_file.txt";
 
         // When & Then
         Exception exception = assertThrows(Exception.class, () -> {
-            fileService.setFilePath(invalidPath);
+            fileService.setAndValidateFilePath(invalidPath);
         });
 
         assertEquals("Файл не найден, повторите ввод", exception.getMessage());
@@ -112,7 +113,7 @@ class FileServiceTest {
     @DisplayName("Чтение файла: существующий файл возвращает корректное содержимое")
     void getFileText_ValidFile_ReturnsContent() throws Exception {
         // Given
-        fileService.setFilePath(TEST_FILE_PATH);
+        fileService.setAndValidateFilePath(TEST_FILE_PATH);
 
         // When
         String actualContent = fileService.getFileText();
@@ -125,7 +126,7 @@ class FileServiceTest {
     @DisplayName("Чтение файла: удалённый файл вызывает исключение")
     void getFileText_InvalidFile_ThrowsException() throws Exception {
         // Given
-        fileService.setFilePath(TEST_FILE_PATH);
+        fileService.setAndValidateFilePath(TEST_FILE_PATH);
         Files.delete(Paths.get(TEST_FILE_PATH)); // удаляем файл после установки пути
 
         // When & Then
@@ -141,7 +142,7 @@ class FileServiceTest {
     @DisplayName("Валидация пути: существующий файл возвращает true")
     void isValidFilePath_ValidFile_ReturnsTrue() throws Exception {
         // Given
-        fileService.setFilePath(TEST_FILE_PATH);
+        fileService.setAndValidateFilePath(TEST_FILE_PATH);
 
         // When
         boolean isValid = fileService.isValidFilePath();
@@ -154,7 +155,7 @@ class FileServiceTest {
     @DisplayName("Валидация пути: удалённый файл возвращает false")
     void isValidFilePath_InvalidFile_ReturnsFalse() throws Exception {
         // Given
-        fileService.setFilePath(TEST_FILE_PATH);
+        fileService.setAndValidateFilePath(TEST_FILE_PATH);
         Files.delete(Paths.get(TEST_FILE_PATH));
 
         // When
@@ -181,7 +182,7 @@ class FileServiceTest {
     @DisplayName("Подсчёт слов: корректно считает количество слов в файле")
     void getCountOfWords_ValidFile_ReturnsCorrectCount() throws Exception {
         // Given
-        fileService.setFilePath(TEST_FILE_PATH);
+        fileService.setAndValidateFilePath(TEST_FILE_PATH);
         int expectedWordCount = fileContent.split(" ").length;
 
         // When
@@ -196,7 +197,7 @@ class FileServiceTest {
     void getCountOfWords_EmptyFile_ReturnsZero() throws Exception {
         // Given
         Files.writeString(Paths.get(TEST_FILE_PATH), ""); // очищаем файл
-        fileService.setFilePath(TEST_FILE_PATH);
+        fileService.setAndValidateFilePath(TEST_FILE_PATH);
 
         // When
         int wordCount = fileService.getCountOfWords();
@@ -211,7 +212,7 @@ class FileServiceTest {
         // Given
         String singleWord = "hello";
         Files.writeString(Paths.get(TEST_FILE_PATH), singleWord);
-        fileService.setFilePath(TEST_FILE_PATH);
+        fileService.setAndValidateFilePath(TEST_FILE_PATH);
 
         // When
         int wordCount = fileService.getCountOfWords();
@@ -220,11 +221,11 @@ class FileServiceTest {
         assertEquals(1, wordCount);
     }
 
-    @Test
+    @RepeatedTest(100)
     @DisplayName("Поиск подстроки: существующая подстрока возвращает корректное количество вхождений")
     void findCountSubstringInFile_ExistingSubstring_ReturnsCorrectCount() throws Exception {
         // Given
-        fileService.setFilePath(TEST_FILE_PATH);
+        fileService.setAndValidateFilePath(TEST_FILE_PATH);
         String[] words = fileContent.split(" ");
         String searchWord = words[random.nextInt(words.length)]; // случайное слово из текста
 
@@ -247,7 +248,7 @@ class FileServiceTest {
     @DisplayName("Поиск подстроки: несуществующая подстрока возвращает 0")
     void findCountSubstringInFile_NonExistingSubstring_ReturnsZero() throws Exception {
         // Given
-        fileService.setFilePath(TEST_FILE_PATH);
+        fileService.setAndValidateFilePath(TEST_FILE_PATH);
         String nonExistingWord = "supercalifragilisticexpialidocious";
 
         // When
@@ -265,7 +266,7 @@ class FileServiceTest {
     void invalidateFile_ValidFile_InvalidatesAndThrowsException() {
         // Given
         try {
-            fileService.setFilePath(TEST_FILE_PATH);
+            fileService.setAndValidateFilePath(TEST_FILE_PATH);
         } catch (Exception e) {
             fail("Should not throw exception");
         }
@@ -299,7 +300,7 @@ class FileServiceTest {
         // Given
         String content = "test test test test";
         Files.writeString(Paths.get(TEST_FILE_PATH), content);
-        fileService.setFilePath(TEST_FILE_PATH);
+        fileService.setAndValidateFilePath(TEST_FILE_PATH);
 
         // When
         int count = fileService.findCountSubstringInFile("test");
